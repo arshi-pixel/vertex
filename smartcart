@@ -1,0 +1,125 @@
+import datetime
+
+class Product:
+    def _init_(self, name, price, quantity=0):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+    def _str_(self):
+        return f"{self.name} x {self.quantity} - ${self.price * self.quantity:.2f}"
+
+
+class SmartCart:
+    def _init_(self):
+        self.items = []  # Fixed missing assignment
+        self.total = 0.0
+
+    def add_item(self, product, quantity=1):
+        # Avoid modifying the original product instance
+        for item in self.items:
+            if item.name == product.name:
+                item.quantity += quantity  # Increase quantity if product already exists
+                self.calculate_total()
+                return
+
+        # Create a copy of the product with the specified quantity
+        new_product = Product(product.name, product.price, quantity)
+        self.items.append(new_product)
+        self.calculate_total()
+
+    def remove_item(self, product_name):
+        for item in self.items[:]:  # Iterate over a copy to avoid issues during removal
+            if item.name.lower() == product_name.lower():
+                if item.quantity > 1:
+                    item.quantity -= 1  # Reduce quantity instead of removing entirely
+                else:
+                    self.items.remove(item)  # Remove only if quantity is 1
+                self.calculate_total()
+                return True  # Indicate successful removal
+        return False  # Indicate item not found
+
+    def calculate_total(self):
+        self.total = sum(item.price * item.quantity for item in self.items)
+
+    def display_cart(self):
+        if not self.items:
+            print("Your cart is empty.")
+            return
+
+        print("\n--- Current Cart ---")
+        for item in self.items:
+            print(item)
+        print(f"------------------")
+        print(f"Total: ${self.total:.2f}")
+
+    def checkout(self):
+        if not self.items:
+            print("Cannot checkout an empty cart.")
+            return
+
+        print("\n--- Receipt ---")
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))  # Timestamp
+        for item in self.items:
+            print(item)
+        print(f"------------------")
+        print(f"Total: ${self.total:.2f}")
+        print("Thank you for your purchase!")
+
+        # Clear the cart without affecting original product instances
+        self.items = []  # Fixed missing assignment
+        self.total = 0.0
+
+
+# Example usage:
+cart = SmartCart()
+
+# Sample Products (You would typically load these from a database or file)
+apple = Product("Apple", 0.50)
+banana = Product("Banana", 0.25)
+milk = Product("Milk", 3.00)
+bread = Product("Bread", 2.50)
+
+while True:
+    print("\n--- Smart Cart Menu ---")
+    print("1. Add item")
+    print("2. Remove item")
+    print("3. View cart")
+    print("4. Checkout")
+    print("5. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == '1':
+        product_name = input("Enter product name: ")
+        quantity = int(input("Enter quantity: "))
+        product_found = None
+        for p in [apple, banana, milk, bread]:  # Replace with a product list/database lookup
+            if p.name.lower() == product_name.lower():  # Case-insensitive search
+                product_found = p
+                break
+
+        if product_found:
+            cart.add_item(product_found, quantity)
+            print(f"{quantity} {product_name}(s) added to cart.")
+        else:
+            print("Product not found.")
+
+    elif choice == '2':
+        product_name = input("Enter product name to remove: ")
+        if cart.remove_item(product_name):
+            print(f"{product_name} removed from cart.")
+        else:
+            print(f"{product_name} not found in cart.")
+
+    elif choice == '3':
+        cart.display_cart()
+
+    elif choice == '4':
+        cart.checkout()
+
+    elif choice == '5':
+        break
+
+    else:
+        print("Invalid choice. Please try again.")
